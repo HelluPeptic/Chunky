@@ -1,11 +1,5 @@
 package org.popcraft.chunky.platform.impl;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.popcraft.chunky.platform.Config;
-import org.popcraft.chunky.util.Input;
-import org.popcraft.chunky.util.Translator;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
@@ -13,6 +7,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+
+import org.popcraft.chunky.platform.Config;
+import org.popcraft.chunky.util.Input;
+import org.popcraft.chunky.util.Translator;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public class GsonConfig implements Config {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -75,6 +76,28 @@ public class GsonConfig implements Config {
     }
 
     @Override
+    public int getMaxConcurrentChunks() {
+        return Optional.ofNullable(configModel.maxConcurrentChunks).orElse(50);
+    }
+
+    @Override
+    public void setMaxConcurrentChunks(final int maxConcurrentChunks) {
+        configModel.maxConcurrentChunks = maxConcurrentChunks;
+        saveConfig();
+    }
+
+    @Override
+    public int getChunkGenerationDelay() {
+        return Optional.ofNullable(configModel.chunkGenerationDelay).orElse(0);
+    }
+
+    @Override
+    public void setChunkGenerationDelay(final int chunkGenerationDelay) {
+        configModel.chunkGenerationDelay = chunkGenerationDelay;
+        saveConfig();
+    }
+
+    @Override
     public void reload() {
         try (final Reader reader = Files.newBufferedReader(savePath)) {
             configModel = GSON.fromJson(reader, ConfigModel.class);
@@ -104,6 +127,8 @@ public class GsonConfig implements Config {
         private Boolean forceLoadExistingChunks = false;
         private Boolean silent = false;
         private Integer updateInterval = 1;
+        private Integer maxConcurrentChunks = 50;
+        private Integer chunkGenerationDelay = 0;
         private Map<String, TaskModel> tasks;
 
         public Integer getVersion() {

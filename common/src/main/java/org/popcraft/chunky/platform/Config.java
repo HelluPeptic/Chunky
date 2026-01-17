@@ -21,5 +21,13 @@ public interface Config {
 
     void setUpdateInterval(int updateInterval);
 
+    int getMaxConcurrentChunks();
+
+    void setMaxConcurrentChunks(int maxConcurrentChunks);
+
+    int getChunkGenerationDelay();
+
+    void setChunkGenerationDelay(int chunkGenerationDelay);
+
     void reload();
 }

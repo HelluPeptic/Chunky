@@ -1,17 +1,10 @@
 package org.popcraft.chunky;
 
-import com.mojang.brigadier.Command;
-import com.mojang.brigadier.builder.ArgumentBuilder;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.resources.Identifier;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerBossEvent;
-import net.minecraft.server.level.ServerPlayer;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.popcraft.chunky.command.ChunkyCommand;
 import org.popcraft.chunky.command.CommandArguments;
 import org.popcraft.chunky.command.CommandLiteral;
@@ -26,18 +19,26 @@ import org.popcraft.chunky.platform.FabricServer;
 import org.popcraft.chunky.platform.Sender;
 import org.popcraft.chunky.platform.impl.GsonConfig;
 
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
+import com.mojang.brigadier.Command;
 import static com.mojang.brigadier.arguments.IntegerArgumentType.integer;
 import static com.mojang.brigadier.arguments.StringArgumentType.string;
 import static com.mojang.brigadier.arguments.StringArgumentType.word;
+import com.mojang.brigadier.builder.ArgumentBuilder;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.commands.CommandSourceStack;
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 import static net.minecraft.commands.arguments.DimensionArgument.dimension;
 import static net.minecraft.commands.arguments.EntityArgument.player;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerBossEvent;
+import net.minecraft.server.level.ServerPlayer;
 
 public class ChunkyFabric implements ModInitializer {
     public static final boolean ENABLE_MOONRISE_WORKAROUNDS = FabricLoader.getInstance().isModLoaded("moonrise");
@@ -119,6 +120,9 @@ public class ChunkyFabric implements ModInitializer {
                     argument(CommandLiteral.SHAPE, string()).suggests(SuggestionProviders.SHAPES));
             registerArguments(command, literal(CommandLiteral.SILENT));
             registerArguments(command, literal(CommandLiteral.SPAWN));
+            registerArguments(command, literal(CommandLiteral.SPEED),
+                    argument(CommandLiteral.CHUNKS, word()),
+                    argument(CommandLiteral.DELAY, integer()));
             registerArguments(command, literal(CommandLiteral.START),
                     argument(CommandLiteral.WORLD, dimension()),
                     argument(CommandLiteral.SHAPE, string()).suggests(SuggestionProviders.SHAPES),

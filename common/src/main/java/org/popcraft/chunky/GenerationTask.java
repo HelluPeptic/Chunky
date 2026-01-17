@@ -1,5 +1,11 @@
 package org.popcraft.chunky;
 
+import java.util.Deque;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.popcraft.chunky.api.event.task.GenerationCompleteEvent;
 import org.popcraft.chunky.api.event.task.GenerationProgressEvent;
 import org.popcraft.chunky.event.task.GenerationTaskFinishEvent;
@@ -15,14 +21,8 @@ import org.popcraft.chunky.util.Pair;
 import org.popcraft.chunky.util.RegionCache;
 import org.popcraft.chunky.util.TranslationKey;
 
-import java.util.Deque;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicLong;
-
 public class GenerationTask implements Runnable {
-    private static final int MAX_WORKING_COUNT = Input.tryInteger(System.getProperty("chunky.maxWorkingCount")).orElse(50);
+    private final int maxWorkingCount;
     private static final double SAMPLE_INTERVAL = 1000d * Math.max(Input.tryInteger(System.getProperty("chunky.sampleInterval")).orElse(30), 30);
     private static final double SAMPLE_SUB_INTERVAL = SAMPLE_INTERVAL / 30;
     private final Chunky chunky;
@@ -39,8 +39,13 @@ public class GenerationTask implements Runnable {
     private long prevTime;
 
     public GenerationTask(final Chunky chunky, final Selection selection, final long count, final long time, final boolean cancelled) {
-        this(chunky, selection);
+        this.chunky = chunky;
+        this.selection = selection;
         this.chunkIterator = ChunkIteratorFactory.getChunkIterator(selection, count);
+        this.shape = ShapeFactory.getShape(selection);
+        this.progress = new Progress(selection.world().getName());
+        this.worldState = chunky.getRegionCache().getWorld(selection.world().getName());
+        this.maxWorkingCount = chunky.getConfig().getMaxConcurrentChunks();
         this.finishedChunks.set(count);
         this.cancelled = cancelled;
         this.prevTime = time;
@@ -53,6 +58,7 @@ public class GenerationTask implements Runnable {
         this.shape = ShapeFactory.getShape(selection);
         this.progress = new Progress(selection.world().getName());
         this.worldState = chunky.getRegionCache().getWorld(selection.world().getName());
+        this.maxWorkingCount = chunky.getConfig().getMaxConcurrentChunks();
     }
 
     private synchronized void update(final int chunkX, final int chunkZ, final boolean loaded) {
@@ -121,8 +127,9 @@ public class GenerationTask implements Runnable {
         if (!chunkIterator.process()) {
             stop(true);
         }
-        final Semaphore working = new Semaphore(MAX_WORKING_COUNT);
+        final Semaphore working = new Semaphore(maxWorkingCount);
         final boolean forceLoadExistingChunks = chunky.getConfig().isForceLoadExistingChunks();
+        final int chunkGenerationDelay = chunky.getConfig().getChunkGenerationDelay();
         startTime.set(System.currentTimeMillis());
         while (!stopped && chunkIterator.hasNext()) {
             final ChunkCoordinate chunk = chunkIterator.next();
@@ -138,6 +145,10 @@ public class GenerationTask implements Runnable {
             }
             try {
                 working.acquire();
+                // Add configurable delay between chunk generations
+                if (chunkGenerationDelay > 0) {
+                    Thread.sleep(chunkGenerationDelay);
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 stop(cancelled);

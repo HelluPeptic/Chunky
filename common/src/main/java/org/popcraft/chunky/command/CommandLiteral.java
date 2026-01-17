@@ -46,6 +46,10 @@ public final class CommandLiteral {
     public static final String PLAYER = "player";
     public static final String VALUE = "value";
     public static final String TYPE = "type";
+    public static final String SPEED = "speed";
+    public static final String CHUNKS = "chunks";
+    public static final String CONCURRENT = "concurrent";
+    public static final String DELAY = "delay";
 
     private CommandLiteral() {
     }

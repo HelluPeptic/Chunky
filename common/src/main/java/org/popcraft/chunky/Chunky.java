@@ -1,5 +1,15 @@
 package org.popcraft.chunky;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.popcraft.chunky.api.ChunkyAPI;
 import org.popcraft.chunky.api.ChunkyAPIImpl;
 import org.popcraft.chunky.command.CancelCommand;
@@ -20,6 +30,7 @@ import org.popcraft.chunky.command.SelectionCommand;
 import org.popcraft.chunky.command.ShapeCommand;
 import org.popcraft.chunky.command.SilentCommand;
 import org.popcraft.chunky.command.SpawnCommand;
+import org.popcraft.chunky.command.SpeedCommand;
 import org.popcraft.chunky.command.StartCommand;
 import org.popcraft.chunky.command.TrimCommand;
 import org.popcraft.chunky.command.WorldBorderCommand;
@@ -35,16 +46,6 @@ import org.popcraft.chunky.util.TaskLoader;
 import org.popcraft.chunky.util.TaskScheduler;
 import org.popcraft.chunky.util.Translator;
 import org.popcraft.chunky.util.Version;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class Chunky {
     private final Server server;
@@ -121,6 +122,7 @@ public class Chunky {
         commandMap.put(CommandLiteral.SHAPE, new ShapeCommand(this));
         commandMap.put(CommandLiteral.SILENT, new SilentCommand(this));
         commandMap.put(CommandLiteral.SPAWN, new SpawnCommand(this));
+        commandMap.put(CommandLiteral.SPEED, new SpeedCommand(this));
         commandMap.put(CommandLiteral.START, new StartCommand(this));
         commandMap.put(CommandLiteral.TRIM, new TrimCommand(this));
         commandMap.put(CommandLiteral.WORLDBORDER, new WorldBorderCommand(this));
